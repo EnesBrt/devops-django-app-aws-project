@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: django
+  labels:
+    app: django
+spec:
+  ports:
+    - port: 8000
+  selector:
+    app: django
+    tier: app
+  type: LoadBalancer
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: django-app-pvc
+  labels:
+    app: django
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-sc
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django
+  labels:
+    app: django
+spec:
+  selector:
+    matchLabels:
+      app: django
+      tier: app
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: django
+        tier: app
+    spec:
+      volumes:
+        - name: django-app-data
+          persistentVolumeClaim:
+            claimName: django-app-pvc
+      containers:
+        - image: 956676001061.dkr.ecr.us-east-1.amazonaws.com/django-k8s-app # Change this to your ECR repo for app
+          name: app
+          ports:
+            - containerPort: 8080
+              name: app
+          volumeMounts:
+            - name: django-app-data
+              mountPath: /vol/web
+          env:
+            - name: DB_HOST
+              value: django-k8s-db.ccytidzfg35k.us-east-1.rds.amazonaws.com # Change this to your RDS endpoint
+            - name: DB_NAME
+              value: djangoproject
+            - name: DB_USER
+              value: djangouser
+            - name: ALLOWED_HOSTS
+              value: "a6a233fa22a474e72a17282f9ec61be3-1800832388.us-east-1.elb.amazonaws.com" # Change this to your service host
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: db-password
+                  key: password
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django
+                  key: secret
+
+        - image: 956676001061.dkr.ecr.us-east-1.amazonaws.com/django-k8s-proxy # Change this to your ECR repo for proxy
+          name: proxy
+          ports:
+            - containerPort: 8000
+              name: proxy
+          volumeMounts:
+            - name: django-app-data
+              mountPath: /vol/web
+          env:
+            - name: APP_HOST
+              value: "127.0.0.1"
+            - name: APP_PORT
+              value: "8080"
