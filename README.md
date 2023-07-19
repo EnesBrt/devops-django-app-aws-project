@@ -18,8 +18,6 @@ Pour utiliser ce projet, vous aurez besoin de :
 - aws-vault pour une gestion sécurisée des identifiants AWS
 - Jenkins pour l'automatisation du déploiement
 
-Une fois que vous avez ces outils installés et configurés, vous pouvez cloner ce dépôt et suivre les instructions du fichier README pour déployer l'application sur AWS.
-
 ## Fonctionnalités du projet
 
 - Application Django conteneurisée avec Docker
