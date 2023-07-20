@@ -5,6 +5,6 @@ metadata:
 provisioner: efs.csi.aws.com
 parameters:
   provisioningMode: efs-ap
-  fileSystemId: fs-0ddcb4914441b7b7e # Change this to your EFS ID
+  fileSystemId: fs-0ddcb4914441b7b7e # EFS ID
   directoryPerms: "755"
   basePath: "/dynamic_provisioning"
